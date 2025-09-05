@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="API Data Viewer with Table Output">
+    <title>API Data Viewer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }.results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }.error {
+            color: red;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>API Data Viewer</h1>
+    </header>
+    <main>
+        <form id="apiForm">
+            <label for="apiUrl">Enter API URL:</label><br>
+            <input type="text" id="apiUrl" placeholder="https://site.com/tag?tag=x&start=123&end=456&code=9" required>
+            <button type="submit">Fetch Data</button>
+        </form>
+
+        <div id="output" class="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('apiForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent form submission from reloading the page
+
+            const apiUrl = document.getElementById('apiUrl').value;
+            const outputDiv = document.getElementById('output');
+
+            // Clear previous results
+            outputDiv.innerHTML = '';
+
+            try {
+                // Fetch the data from the API
+                const response = await fetch(apiUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // Check if the "data" field exists and is an array
+                if (data.data && Array.isArray(data.data)) {
+                    // Generate and display the table
+                    const tableHtml = generateTable(data.data);
+                    outputDiv.innerHTML = `
+                        <h3>API Response:</h3>
+                        ${tableHtml}
+                    `;
+                } else {
+                    outputDiv.innerHTML = `<p class="error">No valid "data" array found in the response.</p>`;
+                }
+            } catch (error) {
+                // Display error message
+                outputDiv.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            }
+        });
+
+        /**
+         * Generates an HTML table from an array of objects.
+         * @param {Array} dataArray - The array of objects to display.
+         * @returns {string} - The HTML string for the table.
+         */
+        function generateTable(dataArray) {
+            // Extract table headers from the keys of the first object
+            const headers = Object.keys(dataArray[0]);
+
+            // Generate the table header row
+            let table = '<table>';
+            table += '<thead><tr>';
+            headers.forEach(header => {
+                table += `<th>${header}</th>`;
+            });
+            table += '</tr></thead>';
+
+            // Generate the table body rows
+            table += '<tbody>';
+            dataArray.forEach(row => {
+                table += '<tr>';
+                headers.forEach(header => {
+                    table += `<td>${row[header]}</td>`;
+                });
+                table += '</tr>';
+            });
+            table += '</tbody>';
+
+            table += '</table>';
+            return table;
+        }
+    </script>
+</body>
+</html>

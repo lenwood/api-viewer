@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="API Data Viewer with Authentication Support">
+    <title>API Data Viewer with Auth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            text-align: center;
+        }
+
+        main {
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        form {
+            margin-bottom: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+
+        .auth-fields {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            margin-bottom: 15px;
+        }
+
+        .auth-fields h4 {
+            margin-top: 0;
+            color: #495057;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #fff;
+        }
+
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        table th {
+            background-color: #f2f2f2;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .request-details {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>API Data Viewer with Authentication</h1>
+    </header>
+    <main>
+        <form id="apiForm">
+            <div class="form-group">
+                <label for="apiUrl">API URL:</label>
+                <input type="text" id="apiUrl" placeholder="https://api.example.com/data" required>
+            </div>
+
+            <div class="auth-fields">
+                <h4>Authentication (Optional)</h4>
+                
+                <div class="form-group">
+                    <label for="authType">Authentication Type:</label>
+                    <select id="authType">
+                        <option value="none">No Authentication</option>
+                        <option value="bearer">Bearer Token</option>
+                        <option value="apikey-header">API Key (Header)</option>
+                        <option value="apikey-query">API Key (Query Parameter)</option>
+                        <option value="basic">Basic Auth</option>
+                        <option value="custom">Custom Header</option>
+                    </select>
+                </div>
+
+                <!-- Bearer Token -->
+                <div id="bearerFields" class="form-group hidden">
+                    <label for="bearerToken">Bearer Token:</label>
+                    <input type="password" id="bearerToken" placeholder="your-bearer-token">
+                </div>
+
+                <!-- API Key Header -->
+                <div id="apikeyHeaderFields" class="hidden">
+                    <div class="form-group">
+                        <label for="apiKeyHeaderName">Header Name:</label>
+                        <input type="text" id="apiKeyHeaderName" placeholder="X-API-Key" value="X-API-Key">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKeyHeaderValue">API Key:</label>
+                        <input type="password" id="apiKeyHeaderValue" placeholder="your-api-key">
+                    </div>
+                </div>
+
+                <!-- API Key Query -->
+                <div id="apikeyQueryFields" class="hidden">
+                    <div class="form-group">
+                        <label for="apiKeyQueryName">Query Parameter Name:</label>
+                        <input type="text" id="apiKeyQueryName" placeholder="api_key" value="api_key">
+                    </div>
+                    <div class="form-group">
+                        <label for="apiKeyQueryValue">API Key:</label>
+                        <input type="password" id="apiKeyQueryValue" placeholder="your-api-key">
+                    </div>
+                </div>
+
+                <!-- Basic Auth -->
+                <div id="basicAuthFields" class="hidden">
+                    <div class="form-group">
+                        <label for="basicUsername">Username:</label>
+                        <input type="text" id="basicUsername" placeholder="username">
+                    </div>
+                    <div class="form-group">
+                        <label for="basicPassword">Password:</label>
+                        <input type="password" id="basicPassword" placeholder="password">
+                    </div>
+                </div>
+
+                <!-- Custom Header -->
+                <div id="customHeaderFields" class="hidden">
+                    <div class="form-group">
+                        <label for="customHeaderName">Header Name:</label>
+                        <input type="text" id="customHeaderName" placeholder="Authorization">
+                    </div>
+                    <div class="form-group">
+                        <label for="customHeaderValue">Header Value:</label>
+                        <input type="password" id="customHeaderValue" placeholder="Custom auth-token">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Fetch Data</button>
+        </form>
+
+        <div id="output" class="results">
+            <!-- Results will be displayed here -->
+        </div>
+    </main>
+
+    <script>
+        // Show/hide authentication fields based on selected type
+        document.getElementById('authType').addEventListener('change', function() {
+            const authType = this.value;
+            const allAuthFields = document.querySelectorAll('#bearerFields, #apikeyHeaderFields, #apikeyQueryFields, #basicAuthFields, #customHeaderFields');
+            
+            // Hide all auth fields
+            allAuthFields.forEach(field => field.classList.add('hidden'));
+            
+            // Show relevant fields
+            switch(authType) {
+                case 'bearer':
+                    document.getElementById('bearerFields').classList.remove('hidden');
+                    break;
+                case 'apikey-header':
+                    document.getElementById('apikeyHeaderFields').classList.remove('hidden');
+                    break;
+                case 'apikey-query':
+                    document.getElementById('apikeyQueryFields').classList.remove('hidden');
+                    break;
+                case 'basic':
+                    document.getElementById('basicAuthFields').classList.remove('hidden');
+                    break;
+                case 'custom':
+                    document.getElementById('customHeaderFields').classList.remove('hidden');
+                    break;
+            }
+        });
+
+        document.getElementById('apiForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+
+            const apiUrl = document.getElementById('apiUrl').value;
+            const authType = document.getElementById('authType').value;
+            const outputDiv = document.getElementById('output');
+
+            // Clear previous results
+            outputDiv.innerHTML = '';
+
+            try {
+                // Prepare the request
+                let finalUrl = apiUrl;
+                const fetchOptions = {
+                    method: 'GET',
+                    headers: {}
+                };
+
+                // Configure authentication based on type
+                switch(authType) {
+                    case 'bearer':
+                        const bearerToken = document.getElementById('bearerToken').value;
+                        if (bearerToken) {
+                            fetchOptions.headers['Authorization'] = `Bearer ${bearerToken}`;
+                        }
+                        break;
+                        
+                    case 'apikey-header':
+                        const headerName = document.getElementById('apiKeyHeaderName').value;
+                        const headerValue = document.getElementById('apiKeyHeaderValue').value;
+                        if (headerName && headerValue) {
+                            fetchOptions.headers[headerName] = headerValue;
+                        }
+                        break;
+                        
+                    case 'apikey-query':
+                        const queryName = document.getElementById('apiKeyQueryName').value;
+                        const queryValue = document.getElementById('apiKeyQueryValue').value;
+                        if (queryName && queryValue) {
+                            const url = new URL(finalUrl);
+                            url.searchParams.append(queryName, queryValue);
+                            finalUrl = url.toString();
+                        }
+                        break;
+                        
+                    case 'basic':
+                        const username = document.getElementById('basicUsername').value;
+                        const password = document.getElementById('basicPassword').value;
+                        if (username && password) {
+                            const credentials = btoa(`${username}:${password}`);
+                            fetchOptions.headers['Authorization'] = `Basic ${credentials}`;
+                        }
+                        break;
+                        
+                    case 'custom':
+                        const customName = document.getElementById('customHeaderName').value;
+                        const customValue = document.getElementById('customHeaderValue').value;
+                        if (customName && customValue) {
+                            fetchOptions.headers[customName] = customValue;
+                        }
+                        break;
+                }
+
+                // Show request details
+                const requestDetails = `
+                    <div class="request-details">
+                        <strong>Request Details:</strong><br>
+                        URL: ${finalUrl}<br>
+                        Method: ${fetchOptions.method}<br>
+                        Headers: ${JSON.stringify(fetchOptions.headers, null, 2)}
+                    </div>
+                `;
+
+                // Fetch the data from the API
+                const response = await fetch(finalUrl, fetchOptions);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status} - ${response.statusText}`);
+                }
+
+                const data = await response.json();
+
+                // Check if the "data" field exists and is an array
+                if (data.data && Array.isArray(data.data)) {
+                    const tableHtml = generateTable(data.data);
+                    outputDiv.innerHTML = `
+                        <p class="success">✅ Successfully fetched ${data.data.length} records</p>
+                        ${requestDetails}
+                        <h3>API Response:</h3>
+                        ${tableHtml}
+                    `;
+                } else if (Array.isArray(data)) {
+                    // Handle case where the root response is an array
+                    const tableHtml = generateTable(data);
+                    outputDiv.innerHTML = `
+                        <p class="success">✅ Successfully fetched ${data.length} records</p>
+                        ${requestDetails}
+                        <h3>API Response:</h3>
+                        ${tableHtml}
+                    `;
+                } else {
+                    // Display raw JSON if no array is found
+                    outputDiv.innerHTML = `
+                        <p class="error">No array data found. Showing raw response:</p>
+                        ${requestDetails}
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                outputDiv.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+            }
+        });
+
+        /**
+         * Generates an HTML table from an array of objects.
+         * @param {Array} dataArray - The array of objects to display.
+         * @returns {string} - The HTML string for the table.
+         */
+        function generateTable(dataArray) {
+            if (!dataArray || dataArray.length === 0) {
+                return '<p>No data to display</p>';
+            }
+
+            // Extract table headers from the keys of the first object
+            const headers = Object.keys(dataArray[0]);
+
+            // Generate the table header row
+            let table = '<table>';
+            table += '<thead><tr>';
+            headers.forEach(header => {
+                table += `<th>${header}</th>`;
+            });
+            table += '</tr></thead>';
+
+            // Generate the table body rows
+            table += '<tbody>';
+            dataArray.forEach(row => {
+                table += '<tr>';
+                headers.forEach(header => {
+                    let cellValue = row[header];
+                    // Handle null, undefined, or object values
+                    if (cellValue === null || cellValue === undefined) {
+                        cellValue = '';
+                    } else if (typeof cellValue === 'object') {
+                        cellValue = JSON.stringify(cellValue);
+                    }
+                    table += `<td>${cellValue}</td>`;
+                });
+                table += '</tr>';
+            });
+            table += '</tbody>';
+
+            table += '</table>';
+            return table;
+        }
+    </script>
+</body>
+</html>
